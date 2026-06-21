@@ -127,6 +127,14 @@ Future capabilities, gated on actual need rather than scheduled:
 
 ## 4. Notes for future sessions
 
+- **Visible-cell iteration.** Grid experiments (Ulam, Diagonal Bounce) draw by iterating
+  the on-screen cells (clamped to the data bounds) and inverting the mapping per cell —
+  *not* by walking every integer each frame. This is what lets `count` reach the millions
+  (currently 3,000,000 ≈ 217k primes) while staying smooth zoomed in. Both inverses are
+  closed-form and verified exact: Ulam's `spiralN(x, y)` and Diagonal Bounce's `cellN(x, y)`.
+  The same inverse powers `at()` for the hover readout. Primes come from the cached sieve;
+  no dataset (the sieve produces millions in milliseconds — see the dataset decision in
+  the git log).
 - Keep `core/` rendering-agnostic where reasonable (`viewport`, `primes` are pure) so the
   WebGL upgrade stays cheap.
 - Resist adding the parameter UI or a plugin framework until a concrete experiment forces

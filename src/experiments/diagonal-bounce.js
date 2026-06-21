@@ -11,11 +11,19 @@ import { drawCellLabels } from '../core/labels.js';
 //   0 1 5 6
 //
 // This is the Cantor pairing enumeration. Primes are highlighted. Drawn in
-// world coordinates (1 unit = 1 cell, origin at bottom-left) for the camera.
+// world coordinates; we iterate only the visible cells and invert the mapping
+// per cell, so the count can run into the millions and stay smooth zoomed in.
 
-// Once labels are at least this many screen pixels tall, draw the integer
-// inside each visible prime square.
+// Once cells are at least this many screen pixels, draw the integer inside
+// each visible prime square.
 const LABEL_MIN_SCALE = 26;
+
+// Cell (x, y) -> integer n, via the Cantor diagonal.
+function cellN(x, y) {
+  const d = x + y;
+  const k = d % 2 === 1 ? d - x : x; // odd diagonals start on the x-axis
+  return (d * (d + 1)) / 2 + k;
+}
 
 export default {
   id: 'diagonal-bounce',
@@ -23,46 +31,41 @@ export default {
   description: 'Integers fill bouncing anti-diagonals from the bottom-left corner; primes highlighted.',
 
   // Tweakable knob (no UI yet — edit and reload).
-  count: 200000,
+  count: 3000000,
 
   bounds() {
     const dMax = Math.floor((Math.sqrt(8 * this.count + 1) - 1) / 2);
     return { minX: 0, minY: 0, maxX: dMax + 1, maxY: dMax + 1 };
   },
 
-  // World position -> the integer in that cell (or null). Inverse of the
-  // forward mapping below; closed-form via the Cantor diagonal.
+  // World position -> the integer in that cell (or null).
   at(wx, wy) {
     const x = Math.floor(wx);
     const y = Math.floor(wy);
     if (x < 0 || y < 0) return null;
-    const d = x + y;
-    const triangular = (d * (d + 1)) / 2;
-    const k = d % 2 === 1 ? d - x : x; // odd diagonals start on the x-axis
-    const n = triangular + k;
-    if (n > this.count) return null;
-    return { n, x, y };
+    const n = cellN(x, y);
+    return n <= this.count ? { n, x, y } : null;
   },
 
   draw(renderer, view) {
     const { ctx } = renderer;
     const count = this.count;
     const flags = cachedSieve(count);
-    const m = 1; // cull margin (world units)
-    const showLabels = view.scale >= LABEL_MIN_SCALE;
-    const labels = showLabels ? [] : null;
+    const b = this.bounds();
 
+    // Iterate only the visible cells, clamped to the data extent.
+    const x0 = Math.max(Math.floor(view.minX), 0);
+    const x1 = Math.min(Math.ceil(view.maxX), b.maxX);
+    const y0 = Math.max(Math.floor(view.minY), 0);
+    const y1 = Math.min(Math.ceil(view.maxY), b.maxY);
+
+    const labels = view.scale >= LABEL_MIN_SCALE ? [] : null;
     ctx.fillStyle = '#7fd1ff';
 
-    let n = 0;
-    for (let d = 0; n <= count; d++) {
-      const fromXAxis = d % 2 === 1; // odd diagonals start on the x-axis
-      for (let k = 0; k <= d && n <= count; k++, n++) {
-        if (!flags[n]) continue;
-        const x = fromXAxis ? d - k : k;
-        const y = fromXAxis ? k : d - k;
-        if (x < view.minX - m || x > view.maxX + m ||
-            y < view.minY - m || y > view.maxY + m) continue;
+    for (let y = y0; y <= y1; y++) {
+      for (let x = x0; x <= x1; x++) {
+        const n = cellN(x, y);
+        if (n > count || !flags[n]) continue;
         ctx.fillRect(x + 0.05, y + 0.05, 0.9, 0.9);
         if (labels) labels.push(n, x + 0.5, y + 0.5);
       }

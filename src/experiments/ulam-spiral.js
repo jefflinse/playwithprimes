@@ -4,35 +4,25 @@ import { drawCellLabels } from '../core/labels.js';
 // Walk the integers 1..count in an outward square spiral, filling a cell
 // whenever the integer is prime. The primes famously cluster along diagonals.
 //
-// Drawn in world coordinates (1 unit = 1 cell, centered on the origin) so the
-// camera can pan/zoom freely. Cells outside the visible rect are skipped.
+// Drawn in world coordinates (1 unit = 1 cell, centered on the origin). Rather
+// than walk every integer each frame, we iterate only the visible cells and
+// invert the spiral per cell — so cost scales with what's on screen, letting
+// the count run into the millions while staying smooth when zoomed in.
 
 // Once cells are at least this many screen pixels, label the prime squares.
 const LABEL_MIN_SCALE = 26;
 
-// The spiral has no cheap closed-form inverse, so cache a coordinate->integer
-// lookup (built once per count) to answer hover queries in O(1).
-let cachedIndex = null;
-function spiralIndex(count) {
-  if (cachedIndex && cachedIndex.count === count) return cachedIndex;
-  const r = Math.ceil(Math.sqrt(count) / 2) + 2;
-  const w = 2 * r + 1;
-  const arr = new Int32Array(w * w); // 0 = empty (integers start at 1)
-  let x = 0, y = 0, dx = 1, dy = 0, segLen = 1, segPassed = 0, turns = 0;
-  for (let n = 1; n <= count; n++) {
-    if (Math.abs(x) <= r && Math.abs(y) <= r) arr[(y + r) * w + (x + r)] = n;
-    x += dx;
-    y += dy;
-    if (++segPassed === segLen) {
-      segPassed = 0;
-      const ndx = dy, ndy = -dx;
-      dx = ndx;
-      dy = ndy;
-      if (++turns % 2 === 0) segLen++;
-    }
-  }
-  cachedIndex = { count, r, w, arr };
-  return cachedIndex;
+// Closed-form inverse of the spiral: grid cell (x, y) -> integer n.
+// (Verified exact against the forward walk.)
+function spiralN(x, y) {
+  if (x === 0 && y === 0) return 1;
+  const r = Math.max(Math.abs(x), Math.abs(y));
+  let offset;
+  if (y === r) offset = 7 * r + x;        // top edge
+  else if (x === r) offset = r - y;       // right edge
+  else if (y === -r) offset = 3 * r - x;  // bottom edge
+  else offset = 5 * r + y;                // left edge
+  return (2 * r - 1) * (2 * r - 1) + offset;
 }
 
 export default {
@@ -41,7 +31,7 @@ export default {
   description: 'Integers spiraled outward; primes highlighted. Watch the diagonal streaks emerge.',
 
   // Tweakable knob (no UI yet — edit and reload).
-  count: 250000,
+  count: 3000000,
 
   bounds() {
     const r = Math.ceil(Math.sqrt(this.count) / 2) + 1;
@@ -52,40 +42,31 @@ export default {
   at(wx, wy) {
     const x = Math.round(wx);
     const y = Math.round(wy);
-    const idx = spiralIndex(this.count);
-    if (Math.abs(x) > idx.r || Math.abs(y) > idx.r) return null;
-    const n = idx.arr[(y + idx.r) * idx.w + (x + idx.r)];
-    return n ? { n, x, y } : null;
+    const n = spiralN(x, y);
+    return n >= 1 && n <= this.count ? { n, x, y } : null;
   },
 
   draw(renderer, view) {
     const { ctx } = renderer;
     const count = this.count;
     const flags = cachedSieve(count);
-    const m = 1; // cull margin (world units)
-    const showLabels = view.scale >= LABEL_MIN_SCALE;
-    const labels = showLabels ? [] : null;
+    const b = this.bounds();
 
+    // Iterate only the visible cells, clamped to the data extent.
+    const x0 = Math.max(Math.floor(view.minX), b.minX);
+    const x1 = Math.min(Math.ceil(view.maxX), b.maxX);
+    const y0 = Math.max(Math.floor(view.minY), b.minY);
+    const y1 = Math.min(Math.ceil(view.maxY), b.maxY);
+
+    const labels = view.scale >= LABEL_MIN_SCALE ? [] : null;
     ctx.fillStyle = '#7fd1ff';
 
-    // Spiral state in grid units.
-    let x = 0, y = 0, dx = 1, dy = 0, segLen = 1, segPassed = 0, turns = 0;
-
-    for (let n = 1; n <= count; n++) {
-      if (flags[n] &&
-          x >= view.minX - m && x <= view.maxX + m &&
-          y >= view.minY - m && y <= view.maxY + m) {
+    for (let y = y0; y <= y1; y++) {
+      for (let x = x0; x <= x1; x++) {
+        const n = spiralN(x, y);
+        if (n > count || !flags[n]) continue;
         ctx.fillRect(x - 0.45, y - 0.45, 0.9, 0.9);
         if (labels) labels.push(n, x, y);
-      }
-      x += dx;
-      y += dy;
-      if (++segPassed === segLen) {
-        segPassed = 0;
-        const ndx = dy, ndy = -dx;
-        dx = ndx;
-        dy = ndy;
-        if (++turns % 2 === 0) segLen++;
       }
     }
 

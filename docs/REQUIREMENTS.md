@@ -54,7 +54,7 @@ experiment (F8) and the spark for the whole project.
 |---|-------------|--------|
 | N1 | **Zero build step.** Plain HTML + vanilla JS (ES modules), openable directly / via a static server. No npm/bundler required to run. | accepted |
 | N2 | Rendering via **Canvas 2D** initially, behind a thin seam so a WebGL/GPU backend can be introduced later without rewriting experiments wholesale. | accepted |
-| N3 | Smooth enough for thousands of plotted points (primes) without noticeable lag. | accepted |
+| N3 | Smooth at hundreds of thousands of plotted points. Grid experiments iterate only the *visible* cells (inverting the mapping per cell), so counts in the millions stay responsive when zoomed in; the sieve generates the primes (no dataset). | accepted |
 | N4 | Code stays readable and approachable — this is a thinking tool, not a product. | accepted |
 
 ## 5. Tech decisions (with rationale)
