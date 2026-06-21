@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Experimath</title>
+  <style>
+    :root { color-scheme: dark; }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; }
+    body {
+      display: flex;
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #0b0e14;
+      color: #c8d3e0;
+      overflow: hidden;
+    }
+    #sidebar {
+      width: 260px;
+      flex: 0 0 260px;
+      padding: 20px 16px;
+      border-right: 1px solid #1c2330;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      overflow-y: auto;
+    }
+    #sidebar h1 { font-size: 18px; margin: 0; letter-spacing: .5px; color: #eaf2ff; }
+    #sidebar .tag { font-size: 12px; color: #5d6b80; margin-top: 2px; }
+    #picker { display: flex; flex-direction: column; gap: 6px; }
+    #picker button {
+      text-align: left;
+      padding: 10px 12px;
+      background: #131927;
+      color: #c8d3e0;
+      border: 1px solid #1c2330;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background .12s, border-color .12s;
+    }
+    #picker button:hover { background: #1a2235; }
+    #picker button.active { background: #1e3a5f; border-color: #2f6fb0; color: #eaf2ff; }
+    #meta { margin-top: auto; font-size: 13px; line-height: 1.5; }
+    #exp-name { font-weight: 600; color: #eaf2ff; margin-bottom: 4px; }
+    #exp-desc { color: #7f8da3; }
+    #stage-wrap { flex: 1; position: relative; min-width: 0; }
+    canvas { width: 100%; height: 100%; display: block; }
+  </style>
+</head>
+<body>
+  <aside id="sidebar">
+    <div>
+      <h1>Experimath</h1>
+      <div class="tag">visual math sandbox</div>
+    </div>
+    <nav id="picker"></nav>
+    <div id="meta">
+      <div id="exp-name"></div>
+      <div id="exp-desc"></div>
+    </div>
+  </aside>
+  <main id="stage-wrap">
+    <canvas id="stage"></canvas>
+  </main>
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>
