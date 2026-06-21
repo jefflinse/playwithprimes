@@ -23,6 +23,7 @@ src/
     registry.js         # The list of available experiments (import + array). Single place to add one.
     renderer.js         # Canvas 2D setup: sizing, devicePixelRatio scaling, clear. THE WEBGL SEAM.
     camera.js           # Pan/zoom camera: world↔screen transform, fit-to-bounds, visible rect.
+    labels.js           # Screen-space pass that draws integer labels centered on cells.
     viewport.js         # Coordinate helpers: polar→cartesian, world→screen scaling.
     primes.js           # Math utilities: sieve, isPrime, primesUpTo, nthPrime, primeCount (π).
   experiments/
@@ -79,6 +80,11 @@ Function-style experiments that want fixed screen-space axes/labels set
 `camera: false`; they receive the raw renderer (CSS-px coords, no pan/zoom) and
 may omit `bounds()`. See `prime-counting.js`.
 
+Spatial experiments may also implement `at(worldX, worldY)` returning
+`{ n, x, y }` (the integer under that point, or `null`) to power the hover
+readout. The forward layout and its `at()` inverse must agree — `core/labels.js`
+draws on-square integer labels once the camera zooms in past a threshold.
+
 ## 2. Milestone 1 — scaffold + three seed experiments  ✅ complete
 
 Goal: an openable page with a picker that renders each of the three seeds correctly.
@@ -111,8 +117,9 @@ Future capabilities, gated on actual need rather than scheduled:
 - **WebGL backend** — second renderer behind the `renderer.js` seam when point counts or
   effects demand it.
 - ~~**Pan / zoom**~~ — done via `core/camera.js` (world-space rendering + drag/scroll/reset).
-- **Hover / pick / coordinate readout** — identify the integer under the cursor; build on
-  `camera.screenToWorld`.
+- ~~**Hover readout + on-square labels**~~ — done: experiments expose `at(wx, wy)`; the
+  cursor's integer (and prime/composite) shows in a tooltip, and integers are drawn on
+  the squares at deep zoom (`core/labels.js`). Polar has no cell mapping, so no readout there.
 - **Formal experiment contract** — promote the informal shape to a documented interface.
 - **More experiments** — X-Y scatter maps, complex-plane / Gaussian primes, divisor/totient
   colorings (REQUIREMENTS §7).

@@ -1,11 +1,13 @@
 import { experiments } from './core/registry.js';
 import { createRenderer } from './core/renderer.js';
 import { createCamera } from './core/camera.js';
+import { isPrime } from './core/primes.js';
 
 const canvas = document.getElementById('stage');
 const picker = document.getElementById('picker');
 const nameEl = document.getElementById('exp-name');
 const descEl = document.getElementById('exp-desc');
+const readout = document.getElementById('readout');
 
 const renderer = createRenderer(canvas);
 const camera = createCamera();
@@ -34,6 +36,7 @@ function draw() {
     camera.apply(ctx, renderer.dpr);
     view = camera.visibleRect(renderer.width, renderer.height);
     view.scale = camera.scale;
+    view.toScreen = camera.worldToScreen;
   } else {
     ctx.setTransform(renderer.dpr, 0, 0, renderer.dpr, 0, 0);
     view = { scale: 1, minX: 0, minY: 0, maxX: renderer.width, maxY: renderer.height };
@@ -59,7 +62,35 @@ function select(exp) {
     renderer.resize();
     camera.fit(exp.bounds(), renderer.width, renderer.height);
   }
+  hideReadout();
   requestRender();
+}
+
+// --- Hover readout: which integer is under the cursor ---
+
+function hideReadout() {
+  readout.style.display = 'none';
+}
+
+function updateReadout(sx, sy) {
+  if (sx == null || !usesCamera(current) || !current.at) return hideReadout();
+  const w = camera.screenToWorld(sx, sy);
+  const hit = current.at(w.x, w.y);
+  if (!hit) return hideReadout();
+
+  const prime = isPrime(hit.n);
+  readout.innerHTML =
+    `<span class="n">${hit.n}</span>` +
+    `<span class="kind ${prime ? 'p' : 'c'}">${prime ? 'prime' : 'composite'}</span>`;
+  readout.style.display = 'block';
+
+  // Offset from the cursor, flipping to stay inside the viewport.
+  let left = sx + 16;
+  let top = sy + 16;
+  if (left + readout.offsetWidth > renderer.width) left = sx - readout.offsetWidth - 16;
+  if (top + readout.offsetHeight > renderer.height) top = sy - readout.offsetHeight - 16;
+  readout.style.left = `${left}px`;
+  readout.style.top = `${top}px`;
 }
 
 // --- Interaction: drag to pan, scroll to zoom, double-click to reset ---
@@ -77,12 +108,16 @@ canvas.addEventListener('pointerdown', (e) => {
 });
 
 canvas.addEventListener('pointermove', (e) => {
-  if (!dragging) return;
-  camera.panBy(e.offsetX - lastX, e.offsetY - lastY);
-  lastX = e.offsetX;
-  lastY = e.offsetY;
-  requestRender();
+  if (dragging) {
+    camera.panBy(e.offsetX - lastX, e.offsetY - lastY);
+    lastX = e.offsetX;
+    lastY = e.offsetY;
+    requestRender();
+  }
+  updateReadout(e.offsetX, e.offsetY);
 });
+
+canvas.addEventListener('pointerleave', hideReadout);
 
 const endDrag = (e) => {
   if (!dragging) return;
@@ -97,6 +132,7 @@ canvas.addEventListener('wheel', (e) => {
   e.preventDefault();
   const factor = Math.exp(-e.deltaY * 0.0015);
   camera.zoomAt(e.offsetX, e.offsetY, factor);
+  updateReadout(e.offsetX, e.offsetY);
   requestRender();
 }, { passive: false });
 

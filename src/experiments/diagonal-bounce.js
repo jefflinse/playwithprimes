@@ -1,4 +1,5 @@
 import { cachedSieve } from '../core/primes.js';
+import { drawCellLabels } from '../core/labels.js';
 
 // Lay the integers out on a grid rooted at the bottom-left, filling
 // anti-diagonals (cells where x + y = d) and bouncing direction each
@@ -11,6 +12,11 @@ import { cachedSieve } from '../core/primes.js';
 //
 // This is the Cantor pairing enumeration. Primes are highlighted. Drawn in
 // world coordinates (1 unit = 1 cell, origin at bottom-left) for the camera.
+
+// Once labels are at least this many screen pixels tall, draw the integer
+// inside each visible prime square.
+const LABEL_MIN_SCALE = 26;
+
 export default {
   id: 'diagonal-bounce',
   name: 'Diagonal Bounce',
@@ -24,11 +30,27 @@ export default {
     return { minX: 0, minY: 0, maxX: dMax + 1, maxY: dMax + 1 };
   },
 
+  // World position -> the integer in that cell (or null). Inverse of the
+  // forward mapping below; closed-form via the Cantor diagonal.
+  at(wx, wy) {
+    const x = Math.floor(wx);
+    const y = Math.floor(wy);
+    if (x < 0 || y < 0) return null;
+    const d = x + y;
+    const triangular = (d * (d + 1)) / 2;
+    const k = d % 2 === 1 ? d - x : x; // odd diagonals start on the x-axis
+    const n = triangular + k;
+    if (n > this.count) return null;
+    return { n, x, y };
+  },
+
   draw(renderer, view) {
     const { ctx } = renderer;
     const count = this.count;
     const flags = cachedSieve(count);
     const m = 1; // cull margin (world units)
+    const showLabels = view.scale >= LABEL_MIN_SCALE;
+    const labels = showLabels ? [] : null;
 
     ctx.fillStyle = '#7fd1ff';
 
@@ -42,7 +64,10 @@ export default {
         if (x < view.minX - m || x > view.maxX + m ||
             y < view.minY - m || y > view.maxY + m) continue;
         ctx.fillRect(x + 0.05, y + 0.05, 0.9, 0.9);
+        if (labels) labels.push(n, x + 0.5, y + 0.5);
       }
     }
+
+    if (labels && labels.length) drawCellLabels(ctx, renderer.dpr, view, labels);
   },
 };

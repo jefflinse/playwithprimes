@@ -85,6 +85,10 @@ the first milestone to keep it small.
   reveals crisp detail rather than magnifying pixels — this also subsumes the "bigger
   logical canvas" idea (the world *is* the large canvas; the viewport is a window).
   Experiments that want screen space (e.g. function plots) opt out via `camera: false`.
+- **Hover readout + on-square labels** — *done.* Spatial experiments expose an `at(wx, wy)`
+  inverse; the cursor shows which integer (and prime/composite) it's over, and at deep
+  zoom the integers are drawn on the squares themselves (`core/labels.js`).
+- **Density shading** — *deferred* (intentionally held off for now).
 - **Persistence / shareable configs / image export** — *deferred.*
 - **Formal experiment plugin contract** — *deferred* (F5 is satisfied informally for now).
 

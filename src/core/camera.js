@@ -20,6 +20,10 @@ export function createCamera() {
     return { x: (sx - offsetX) / scale, y: (offsetY - sy) / scale };
   }
 
+  function worldToScreen(wx, wy) {
+    return { x: offsetX + wx * scale, y: offsetY - wy * scale };
+  }
+
   // Pan by a screen-space delta (CSS px).
   function panBy(dx, dy) {
     offsetX += dx;
@@ -55,6 +59,7 @@ export function createCamera() {
   return {
     apply,
     screenToWorld,
+    worldToScreen,
     panBy,
     zoomAt,
     fit,
