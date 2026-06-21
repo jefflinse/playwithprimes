@@ -10,12 +10,18 @@ export function createRenderer(canvas) {
 
   // Size the backing store to the element's CSS size × devicePixelRatio,
   // then scale the context so all drawing happens in CSS pixels.
+  // Returns true if the backing store actually changed size.
   function resize() {
-    dpr = window.devicePixelRatio || 1;
+    const newDpr = window.devicePixelRatio || 1;
     const rect = canvas.getBoundingClientRect();
-    canvas.width = Math.max(1, Math.round(rect.width * dpr));
-    canvas.height = Math.max(1, Math.round(rect.height * dpr));
+    const w = Math.max(1, Math.round(rect.width * newDpr));
+    const h = Math.max(1, Math.round(rect.height * newDpr));
+    if (w === canvas.width && h === canvas.height && newDpr === dpr) return false;
+    dpr = newDpr;
+    canvas.width = w;
+    canvas.height = h;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    return true;
   }
 
   function clear(bg = '#0b0e14') {
@@ -31,6 +37,7 @@ export function createRenderer(canvas) {
     ctx,
     get width() { return canvas.clientWidth; },
     get height() { return canvas.clientHeight; },
+    get dpr() { return dpr; },
     resize,
     clear,
   };

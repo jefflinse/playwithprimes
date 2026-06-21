@@ -1,5 +1,6 @@
 import { experiments } from './core/registry.js';
 import { createRenderer } from './core/renderer.js';
+import { createCamera } from './core/camera.js';
 
 const canvas = document.getElementById('stage');
 const picker = document.getElementById('picker');
@@ -7,17 +8,44 @@ const nameEl = document.getElementById('exp-name');
 const descEl = document.getElementById('exp-desc');
 
 const renderer = createRenderer(canvas);
+const camera = createCamera();
 let current = experiments[0];
+let dirty = true;
 
-// Resize the canvas, clear it, and (re)draw the current experiment.
-function run() {
-  renderer.resize();
+const usesCamera = (exp) => exp.camera !== false;
+const requestRender = () => { dirty = true; };
+
+// Single rAF loop; redraws only when something changed.
+function frame() {
+  if (dirty) {
+    dirty = false;
+    draw();
+  }
+  requestAnimationFrame(frame);
+}
+
+function draw() {
+  const resized = renderer.resize();
   renderer.clear();
+  const ctx = renderer.ctx;
+
+  let view;
+  if (usesCamera(current)) {
+    camera.apply(ctx, renderer.dpr);
+    view = camera.visibleRect(renderer.width, renderer.height);
+    view.scale = camera.scale;
+  } else {
+    ctx.setTransform(renderer.dpr, 0, 0, renderer.dpr, 0, 0);
+    view = { scale: 1, minX: 0, minY: 0, maxX: renderer.width, maxY: renderer.height };
+  }
+
   try {
-    current.draw(renderer);
+    current.draw(renderer, view);
   } catch (err) {
     console.error(`Experiment "${current.id}" failed:`, err);
   }
+  // Note if a resize happened mid-loop so the next frame reflects new size.
+  if (resized) requestRender();
 }
 
 function select(exp) {
@@ -27,8 +55,59 @@ function select(exp) {
   for (const btn of picker.children) {
     btn.classList.toggle('active', btn.dataset.id === exp.id);
   }
-  run();
+  if (usesCamera(exp) && exp.bounds) {
+    renderer.resize();
+    camera.fit(exp.bounds(), renderer.width, renderer.height);
+  }
+  requestRender();
 }
+
+// --- Interaction: drag to pan, scroll to zoom, double-click to reset ---
+
+let dragging = false;
+let lastX = 0;
+let lastY = 0;
+
+canvas.addEventListener('pointerdown', (e) => {
+  if (!usesCamera(current)) return;
+  dragging = true;
+  lastX = e.offsetX;
+  lastY = e.offsetY;
+  canvas.setPointerCapture(e.pointerId);
+});
+
+canvas.addEventListener('pointermove', (e) => {
+  if (!dragging) return;
+  camera.panBy(e.offsetX - lastX, e.offsetY - lastY);
+  lastX = e.offsetX;
+  lastY = e.offsetY;
+  requestRender();
+});
+
+const endDrag = (e) => {
+  if (!dragging) return;
+  dragging = false;
+  if (canvas.hasPointerCapture?.(e.pointerId)) canvas.releasePointerCapture(e.pointerId);
+};
+canvas.addEventListener('pointerup', endDrag);
+canvas.addEventListener('pointercancel', endDrag);
+
+canvas.addEventListener('wheel', (e) => {
+  if (!usesCamera(current)) return;
+  e.preventDefault();
+  const factor = Math.exp(-e.deltaY * 0.0015);
+  camera.zoomAt(e.offsetX, e.offsetY, factor);
+  requestRender();
+}, { passive: false });
+
+canvas.addEventListener('dblclick', () => {
+  if (usesCamera(current) && current.bounds) {
+    camera.fit(current.bounds(), renderer.width, renderer.height);
+    requestRender();
+  }
+});
+
+window.addEventListener('resize', requestRender);
 
 // Build the picker from the registry.
 for (const exp of experiments) {
@@ -39,11 +118,5 @@ for (const exp of experiments) {
   picker.appendChild(btn);
 }
 
-// Redraw on resize (debounced).
-let resizeTimer;
-window.addEventListener('resize', () => {
-  clearTimeout(resizeTimer);
-  resizeTimer = setTimeout(run, 100);
-});
-
 select(current);
+requestAnimationFrame(frame);

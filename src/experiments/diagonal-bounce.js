@@ -9,7 +9,8 @@ import { cachedSieve } from '../core/primes.js';
 //   2 4 7
 //   0 1 5 6
 //
-// This is the Cantor pairing enumeration. Primes are highlighted.
+// This is the Cantor pairing enumeration. Primes are highlighted. Drawn in
+// world coordinates (1 unit = 1 cell, origin at bottom-left) for the camera.
 export default {
   id: 'diagonal-bounce',
   name: 'Diagonal Bounce',
@@ -18,22 +19,17 @@ export default {
   // Tweakable knob (no UI yet — edit and reload).
   count: 200000,
 
-  draw(renderer) {
-    const { ctx, width, height } = renderer;
+  bounds() {
+    const dMax = Math.floor((Math.sqrt(8 * this.count + 1) - 1) / 2);
+    return { minX: 0, minY: 0, maxX: dMax + 1, maxY: dMax + 1 };
+  },
+
+  draw(renderer, view) {
+    const { ctx } = renderer;
     const count = this.count;
-
-    // Cells span the triangle x + y <= dMax, so the grid is (dMax+1) on a side.
-    const dMax = Math.floor((Math.sqrt(8 * count + 1) - 1) / 2);
-    const side = dMax + 1;
-    const pad = 8;
-    const cell = Math.max(1, Math.floor((Math.min(width, height) - pad * 2) / side));
-    const drawSize = cell > 2 ? cell - 1 : cell;
-
-    // Root at the bottom-left: x grows rightward, y grows upward (flip screen y).
-    const ox = pad;
-    const oy = height - pad;
-
     const flags = cachedSieve(count);
+    const m = 1; // cull margin (world units)
+
     ctx.fillStyle = '#7fd1ff';
 
     let n = 0;
@@ -43,9 +39,9 @@ export default {
         if (!flags[n]) continue;
         const x = fromXAxis ? d - k : k;
         const y = fromXAxis ? k : d - k;
-        const px = ox + x * cell;
-        const py = oy - (y + 1) * cell;
-        ctx.fillRect(px, py, drawSize, drawSize);
+        if (x < view.minX - m || x > view.maxX + m ||
+            y < view.minY - m || y > view.maxY + m) continue;
+        ctx.fillRect(x + 0.05, y + 0.05, 0.9, 0.9);
       }
     }
   },

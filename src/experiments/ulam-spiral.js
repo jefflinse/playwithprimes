@@ -2,6 +2,9 @@ import { cachedSieve } from '../core/primes.js';
 
 // Walk the integers 1..count in an outward square spiral, filling a cell
 // whenever the integer is prime. The primes famously cluster along diagonals.
+//
+// Drawn in world coordinates (1 unit = 1 cell, centered on the origin) so the
+// camera can pan/zoom freely. Cells outside the visible rect are skipped.
 export default {
   id: 'ulam-spiral',
   name: 'Ulam Spiral',
@@ -10,21 +13,20 @@ export default {
   // Tweakable knob (no UI yet — edit and reload).
   count: 250000,
 
-  draw(renderer) {
-    const { ctx, width, height } = renderer;
+  bounds() {
+    const r = Math.ceil(Math.sqrt(this.count) / 2) + 1;
+    return { minX: -r, minY: -r, maxX: r, maxY: r };
+  },
+
+  draw(renderer, view) {
+    const { ctx } = renderer;
     const count = this.count;
-
-    // Grid roughly sqrt(count) on a side; size cells to fit the viewport.
-    const side = Math.ceil(Math.sqrt(count));
-    const cell = Math.max(1, Math.floor(Math.min(width, height) / (side + 2)));
-    const cx = width / 2;
-    const cy = height / 2;
-    const drawSize = cell > 2 ? cell - 1 : cell;
-
     const flags = cachedSieve(count);
+    const m = 1; // cull margin (world units)
 
-    // Spiral state: position (x,y) in grid units, current step direction,
-    // and segment bookkeeping (segment length grows every two turns).
+    ctx.fillStyle = '#7fd1ff';
+
+    // Spiral state in grid units.
     let x = 0;
     let y = 0;
     let dx = 1;
@@ -33,19 +35,17 @@ export default {
     let segPassed = 0;
     let turns = 0;
 
-    ctx.fillStyle = '#7fd1ff';
     for (let n = 1; n <= count; n++) {
-      if (flags[n]) {
-        const px = cx + x * cell - drawSize / 2;
-        const py = cy - y * cell - drawSize / 2; // flip y: math up = screen up
-        ctx.fillRect(px, py, drawSize, drawSize);
+      if (flags[n] &&
+          x >= view.minX - m && x <= view.maxX + m &&
+          y >= view.minY - m && y <= view.maxY + m) {
+        ctx.fillRect(x - 0.45, y - 0.45, 0.9, 0.9);
       }
-
       x += dx;
       y += dy;
       if (++segPassed === segLen) {
         segPassed = 0;
-        const ndx = dy;       // rotate the heading 90°
+        const ndx = dy;
         const ndy = -dx;
         dx = ndx;
         dy = ndy;

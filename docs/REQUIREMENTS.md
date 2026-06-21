@@ -79,7 +79,12 @@ the first milestone to keep it small.
   once experiments share a parameter shape.
 - **WebGL / GPU rendering** — *deferred.* See N2; introduced behind the renderer seam when
   needed.
-- **Pan / zoom / interaction** — *deferred.* Static renders first.
+- **Pan / zoom / interaction** — *done.* Spatial experiments render in a world coordinate
+  space; a shared camera (`core/camera.js`) provides drag-to-pan, scroll-to-zoom, and
+  double-click-to-reset. Because experiments redraw in world coords each frame, zooming
+  reveals crisp detail rather than magnifying pixels — this also subsumes the "bigger
+  logical canvas" idea (the world *is* the large canvas; the viewport is a window).
+  Experiments that want screen space (e.g. function plots) opt out via `camera: false`.
 - **Persistence / shareable configs / image export** — *deferred.*
 - **Formal experiment plugin contract** — *deferred* (F5 is satisfied informally for now).
 

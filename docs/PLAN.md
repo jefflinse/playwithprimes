@@ -22,7 +22,8 @@ src/
   core/
     registry.js         # The list of available experiments (import + array). Single place to add one.
     renderer.js         # Canvas 2D setup: sizing, devicePixelRatio scaling, clear. THE WEBGL SEAM.
-    viewport.js         # Coordinate transforms: world↔screen, polar→cartesian, centering/scaling.
+    camera.js           # Pan/zoom camera: world↔screen transform, fit-to-bounds, visible rect.
+    viewport.js         # Coordinate helpers: polar→cartesian, world→screen scaling.
     primes.js           # Math utilities: sieve, isPrime, primesUpTo, nthPrime, primeCount (π).
   experiments/
     ulam-spiral.js      # Seed 1
@@ -60,12 +61,23 @@ export default {
   name: 'Human Readable Name',
   description: 'One line shown in the picker.',
   // Tweakable knobs as plain constants for now (no UI yet — REQUIREMENTS §6).
-  draw(renderer) {
-    const { ctx, width, height } = renderer;
-    // ...draw using ctx + core helpers (viewport, primes)...
+
+  // World-space bounding box, used to frame the experiment on selection.
+  bounds() { return { minX: -100, minY: -100, maxX: 100, maxY: 100 }; },
+
+  // Draw in WORLD coordinates; the camera maps world→screen. `view` gives the
+  // current { scale, minX, minY, maxX, maxY } for sizing strokes and culling
+  // off-screen work. Camera transform is already applied to ctx.
+  draw(renderer, view) {
+    const { ctx } = renderer;
+    // ...draw using ctx + core helpers (primes, viewport)...
   },
 };
 ```
+
+Function-style experiments that want fixed screen-space axes/labels set
+`camera: false`; they receive the raw renderer (CSS-px coords, no pan/zoom) and
+may omit `bounds()`. See `prime-counting.js`.
 
 ## 2. Milestone 1 — scaffold + three seed experiments  ✅ complete
 
@@ -98,7 +110,9 @@ Future capabilities, gated on actual need rather than scheduled:
   (REQUIREMENTS §6, §8).
 - **WebGL backend** — second renderer behind the `renderer.js` seam when point counts or
   effects demand it.
-- **Pan / zoom / hover** — interaction layer on `viewport.js`.
+- ~~**Pan / zoom**~~ — done via `core/camera.js` (world-space rendering + drag/scroll/reset).
+- **Hover / pick / coordinate readout** — identify the integer under the cursor; build on
+  `camera.screenToWorld`.
 - **Formal experiment contract** — promote the informal shape to a documented interface.
 - **More experiments** — X-Y scatter maps, complex-plane / Gaussian primes, divisor/totient
   colorings (REQUIREMENTS §7).

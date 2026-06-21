@@ -7,6 +7,9 @@ export default {
   name: 'Prime Counting π(x)',
   description: 'π(x): how many primes are ≤ x. A staircase that climbs ever more slowly.',
 
+  // Function plot with axes/labels: drawn in screen space, no pan/zoom.
+  camera: false,
+
   // Tweakable knob (no UI yet — edit and reload).
   maxX: 10000,
 
