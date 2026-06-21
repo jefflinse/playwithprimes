@@ -1,4 +1,4 @@
-import { sieve } from '../core/primes.js';
+import { cachedSieve } from '../core/primes.js';
 
 // Lay the integers out on a grid rooted at the bottom-left, filling
 // anti-diagonals (cells where x + y = d) and bouncing direction each
@@ -16,7 +16,7 @@ export default {
   description: 'Integers fill bouncing anti-diagonals from the bottom-left corner; primes highlighted.',
 
   // Tweakable knob (no UI yet — edit and reload).
-  count: 20000,
+  count: 200000,
 
   draw(renderer) {
     const { ctx, width, height } = renderer;
@@ -33,7 +33,7 @@ export default {
     const ox = pad;
     const oy = height - pad;
 
-    const flags = sieve(count);
+    const flags = cachedSieve(count);
     ctx.fillStyle = '#7fd1ff';
 
     let n = 0;

@@ -1,4 +1,4 @@
-import { sieve, primeCount } from '../core/primes.js';
+import { cachedSieve } from '../core/primes.js';
 
 // The prime-counting function π(x): how many primes are ≤ x. Rendered as the
 // staircase it is, with simple axes.
@@ -8,13 +8,15 @@ export default {
   description: 'π(x): how many primes are ≤ x. A staircase that climbs ever more slowly.',
 
   // Tweakable knob (no UI yet — edit and reload).
-  maxX: 1000,
+  maxX: 10000,
 
   draw(renderer) {
     const { ctx, width, height } = renderer;
     const maxX = this.maxX;
-    const flags = sieve(maxX);
-    const maxY = primeCount(maxX) || 1;
+    const flags = cachedSieve(maxX);
+    let totalPrimes = 0;
+    for (let i = 2; i <= maxX; i++) totalPrimes += flags[i];
+    const maxY = totalPrimes || 1;
 
     const pad = 50;
     const plotW = width - pad * 2;

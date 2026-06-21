@@ -13,9 +13,19 @@ export function sieve(n) {
   return isPrimeFlag;
 }
 
+// Memoized sieve. Holds the largest sieve computed so far; a request for a
+// smaller n reuses it (lower indices are still valid). Avoids recomputing on
+// every redraw/resize when an experiment sieves the same range repeatedly.
+let _cache = { n: -1, flags: null };
+export function cachedSieve(n) {
+  if (_cache.flags && n <= _cache.n) return _cache.flags;
+  _cache = { n, flags: sieve(n) };
+  return _cache.flags;
+}
+
 // All primes <= n, as an array.
 export function primesUpTo(n) {
-  const flags = sieve(n);
+  const flags = cachedSieve(n);
   const primes = [];
   for (let i = 2; i <= n; i++) if (flags[i]) primes.push(i);
   return primes;

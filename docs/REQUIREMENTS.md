@@ -18,6 +18,11 @@ iterate. It starts small with a few concrete examples and is expected to **grow 
 complexity over time**. Architecture choices favor that gradual evolution over
 premature generality.
 
+**Originating idea (now built):** a grid rooted at the bottom-left where the integers
+fill anti-diagonals, bouncing direction between the X and Y axes each diagonal (the
+Cantor pairing enumeration), with primes highlighted. This is the "Diagonal Bounce"
+experiment (F8) and the spark for the whole project.
+
 ## 2. Guiding principles
 
 - **Start small, evolve deliberately.** Build the few concrete experiments we actually
@@ -41,6 +46,7 @@ premature generality.
 | F5 | New experiments can be added by writing a single self-contained file and registering it. | accepted |
 | F6 | Core provides reusable math utilities (prime generation/testing) shared across experiments. | accepted |
 | F7 | Core provides coordinate-mapping helpers (world↔screen, polar↔cartesian). | accepted |
+| F8 | Ships the **Diagonal Bounce** experiment (the originating idea): integers on a bottom-left-rooted grid filling bouncing anti-diagonals, primes highlighted. | done |
 
 ## 4. Non-functional requirements
 

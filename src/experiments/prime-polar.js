@@ -9,7 +9,7 @@ export default {
   description: 'Each prime p placed at polar (r = p, θ = p). Spiral arms and rays appear.',
 
   // Tweakable knob (no UI yet — edit and reload).
-  maxPrime: 30000,
+  maxPrime: 200000,
 
   draw(renderer) {
     const { ctx, width, height } = renderer;

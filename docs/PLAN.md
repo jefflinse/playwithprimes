@@ -28,6 +28,7 @@ src/
     ulam-spiral.js      # Seed 1
     prime-polar.js      # Seed 2
     prime-counting.js   # Seed 3
+    diagonal-bounce.js  # The originating idea (Cantor pairing grid)
 docs/
   REQUIREMENTS.md
   PLAN.md
@@ -66,9 +67,10 @@ export default {
 };
 ```
 
-## 2. Milestone 1 — scaffold + three seed experiments
+## 2. Milestone 1 — scaffold + three seed experiments  ✅ complete
 
 Goal: an openable page with a picker that renders each of the three seeds correctly.
+*(Done; the Diagonal Bounce experiment was added immediately after.)*
 
 1. **Scaffold the shell.** `index.html` (canvas + empty picker container) and `src/main.js`
    that mounts the renderer and wires the picker to the registry.
