@@ -3,5 +3,6 @@
 import ulamSpiral from '../experiments/ulam-spiral.js';
 import primePolar from '../experiments/prime-polar.js';
 import primeCounting from '../experiments/prime-counting.js';
+import diagonalBounce from '../experiments/diagonal-bounce.js';
 
-export const experiments = [ulamSpiral, primePolar, primeCounting];
+export const experiments = [ulamSpiral, primePolar, primeCounting, diagonalBounce];
