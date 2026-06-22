@@ -47,6 +47,7 @@ experiment (F8) and the spark for the whole project.
 | F6 | Core provides reusable math utilities (prime generation/testing) shared across experiments. | accepted |
 | F7 | Core provides coordinate-mapping helpers (world↔screen, polar↔cartesian). | accepted |
 | F8 | Ships the **Diagonal Bounce** experiment (the originating idea): integers on a bottom-left-rooted grid filling bouncing anti-diagonals, primes highlighted. | done |
+| F9 | Ships further classic prime-pattern experiments: **Sacks spiral**, **Modular residue wheel**, **Gaussian primes** (complex plane), **Goldbach's comet**. | done |
 
 ## 4. Non-functional requirements
 
@@ -100,8 +101,10 @@ Captured so they aren't lost; not committed.
 
 - Primes as an X-Y scatter under configurable maps (e.g. `p → (p mod a, p ÷ a)`,
   `(n, nth-prime)`).
-- Primes / integers in the complex plane (Gaussian primes).
 - Other grid tilings and number-theoretic colorings (divisor counts, totient, etc.).
+- More patterns: prime gaps, twin-prime highlighting, last-digit/Chebyshev bias,
+  hex/Vogel spirals.
+- *(Built: Gaussian primes, Sacks spiral, modular residue wheel, Goldbach's comet — F9.)*
 
 ## 8. Open questions
 

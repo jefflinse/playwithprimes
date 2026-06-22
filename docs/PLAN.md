@@ -28,10 +28,14 @@ src/
     viewport.js         # Coordinate helpers: polar→cartesian, world→screen scaling.
     primes.js           # Math utilities: sieve, isPrime, primesUpTo, nthPrime, primeCount (π).
   experiments/
-    ulam-spiral.js      # Seed 1
-    prime-polar.js      # Seed 2
-    prime-counting.js   # Seed 3
-    diagonal-bounce.js  # The originating idea (Cantor pairing grid)
+    ulam-spiral.js      # grid  (cells + at() + labels)
+    diagonal-bounce.js  # grid  (the originating idea; Cantor pairing)
+    gaussian-primes.js  # grid  (complex plane ℤ[i]; custom hover label)
+    prime-polar.js      # point cloud (r=p, θ=p)
+    sacks-spiral.js     # point cloud (r=√n, θ=2π√n)
+    modular-wheel.js    # point cloud (angle = residue mod m)
+    prime-counting.js   # function plot (camera:false)
+    goldbach-comet.js   # function plot (camera:false)
 docs/
   REQUIREMENTS.md
   PLAN.md
@@ -87,10 +91,13 @@ Function-style experiments that want fixed screen-space axes/labels set
 `camera: false`; they receive the raw renderer (CSS-px coords, no pan/zoom) and
 may omit `bounds()`. See `prime-counting.js`.
 
-Spatial experiments may also implement `at(worldX, worldY, params)` returning
-`{ n, x, y }` (the integer under that point, or `null`) to power the hover
-readout. The forward layout and its `at()` inverse must agree — `core/labels.js`
-draws on-square integer labels once the camera zooms in past a threshold.
+Grid experiments may also implement `at(worldX, worldY, params)` to power the
+hover readout. It returns `{ n, x, y }` (the integer under that point) or, for
+non-integer lattices, `{ x, y, label, prime }` with a custom display string and
+primality flag (e.g. Gaussian's `a + bi`); return `null` for empty space. The
+forward layout and its `at()` inverse must agree — `core/labels.js` draws
+on-square integer labels once the camera zooms in past a threshold. Point-cloud
+experiments (polar, Sacks, wheel) skip `at()` — there's no clean cell inverse.
 
 Experiments expose tweakables via a `params` schema; the current values are
 passed as the third argument to `draw(renderer, view, params)` and to

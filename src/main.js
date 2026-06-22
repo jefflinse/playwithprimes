@@ -112,9 +112,12 @@ function updateReadout(sx, sy) {
   const hit = current.at(w.x, w.y, params);
   if (!hit) return hideReadout();
 
-  const prime = isPrime(hit.n);
+  // Experiments may supply their own label/prime flag (e.g. Gaussian "a+bi");
+  // otherwise fall back to the integer n and a primality test.
+  const label = hit.label ?? String(hit.n);
+  const prime = hit.prime ?? (hit.n != null ? isPrime(hit.n) : false);
   readout.innerHTML =
-    `<span class="n">${hit.n}</span>` +
+    `<span class="n">${label}</span>` +
     `<span class="kind ${prime ? 'p' : 'c'}">${prime ? 'prime' : 'composite'}</span>`;
   readout.style.display = 'block';
 
