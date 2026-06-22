@@ -10,12 +10,13 @@ export default {
   // Function plot with axes/labels: drawn in screen space, no pan/zoom.
   camera: false,
 
-  // Tweakable knob (no UI yet — edit and reload).
-  maxX: 10000,
+  params: {
+    maxX: { type: 'int', min: 100, max: 200000, step: 100, scale: 'log', default: 10000, label: 'x range', expensive: true },
+  },
 
-  draw(renderer) {
+  draw(renderer, view, params) {
     const { ctx, width, height } = renderer;
-    const maxX = this.maxX;
+    const maxX = params.maxX;
     const flags = cachedSieve(maxX);
     let totalPrimes = 0;
     for (let i = 2; i <= maxX; i++) totalPrimes += flags[i];

@@ -30,28 +30,31 @@ export default {
   name: 'Diagonal Bounce',
   description: 'Integers fill bouncing anti-diagonals from the bottom-left corner; primes highlighted.',
 
-  // Tweakable knob (no UI yet — edit and reload).
-  count: 3000000,
+  params: {
+    count: { type: 'int', min: 1000, max: 10000000, step: 1000, scale: 'log', default: 3000000, label: 'Integers', expensive: true },
+    color: { type: 'color', default: '#7fd1ff', label: 'Prime color' },
+    showLabels: { type: 'bool', default: true, label: 'Labels when zoomed' },
+  },
 
-  bounds() {
-    const dMax = Math.floor((Math.sqrt(8 * this.count + 1) - 1) / 2);
+  bounds(params) {
+    const dMax = Math.floor((Math.sqrt(8 * params.count + 1) - 1) / 2);
     return { minX: 0, minY: 0, maxX: dMax + 1, maxY: dMax + 1 };
   },
 
   // World position -> the integer in that cell (or null).
-  at(wx, wy) {
+  at(wx, wy, params) {
     const x = Math.floor(wx);
     const y = Math.floor(wy);
     if (x < 0 || y < 0) return null;
     const n = cellN(x, y);
-    return n <= this.count ? { n, x, y } : null;
+    return n <= params.count ? { n, x, y } : null;
   },
 
-  draw(renderer, view) {
+  draw(renderer, view, params) {
     const { ctx } = renderer;
-    const count = this.count;
+    const count = params.count;
     const flags = cachedSieve(count);
-    const b = this.bounds();
+    const b = this.bounds(params);
 
     // Iterate only the visible cells, clamped to the data extent.
     const x0 = Math.max(Math.floor(view.minX), 0);
@@ -59,8 +62,8 @@ export default {
     const y0 = Math.max(Math.floor(view.minY), 0);
     const y1 = Math.min(Math.ceil(view.maxY), b.maxY);
 
-    const labels = view.scale >= LABEL_MIN_SCALE ? [] : null;
-    ctx.fillStyle = '#7fd1ff';
+    const labels = (params.showLabels && view.scale >= LABEL_MIN_SCALE) ? [] : null;
+    ctx.fillStyle = params.color;
 
     for (let y = y0; y <= y1; y++) {
       for (let x = x0; x <= x1; x++) {

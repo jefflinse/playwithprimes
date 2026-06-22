@@ -30,27 +30,30 @@ export default {
   name: 'Ulam Spiral',
   description: 'Integers spiraled outward; primes highlighted. Watch the diagonal streaks emerge.',
 
-  // Tweakable knob (no UI yet — edit and reload).
-  count: 3000000,
+  params: {
+    count: { type: 'int', min: 1000, max: 10000000, step: 1000, scale: 'log', default: 3000000, label: 'Integers', expensive: true },
+    color: { type: 'color', default: '#7fd1ff', label: 'Prime color' },
+    showLabels: { type: 'bool', default: true, label: 'Labels when zoomed' },
+  },
 
-  bounds() {
-    const r = Math.ceil(Math.sqrt(this.count) / 2) + 1;
+  bounds(params) {
+    const r = Math.ceil(Math.sqrt(params.count) / 2) + 1;
     return { minX: -r, minY: -r, maxX: r, maxY: r };
   },
 
   // World position -> the integer in that cell (or null).
-  at(wx, wy) {
+  at(wx, wy, params) {
     const x = Math.round(wx);
     const y = Math.round(wy);
     const n = spiralN(x, y);
-    return n >= 1 && n <= this.count ? { n, x, y } : null;
+    return n >= 1 && n <= params.count ? { n, x, y } : null;
   },
 
-  draw(renderer, view) {
+  draw(renderer, view, params) {
     const { ctx } = renderer;
-    const count = this.count;
+    const count = params.count;
     const flags = cachedSieve(count);
-    const b = this.bounds();
+    const b = this.bounds(params);
 
     // Iterate only the visible cells, clamped to the data extent.
     const x0 = Math.max(Math.floor(view.minX), b.minX);
@@ -58,8 +61,8 @@ export default {
     const y0 = Math.max(Math.floor(view.minY), b.minY);
     const y1 = Math.min(Math.ceil(view.maxY), b.maxY);
 
-    const labels = view.scale >= LABEL_MIN_SCALE ? [] : null;
-    ctx.fillStyle = '#7fd1ff';
+    const labels = (params.showLabels && view.scale >= LABEL_MIN_SCALE) ? [] : null;
+    ctx.fillStyle = params.color;
 
     for (let y = y0; y <= y1; y++) {
       for (let x = x0; x <= x1; x++) {

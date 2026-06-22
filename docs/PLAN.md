@@ -24,6 +24,7 @@ src/
     renderer.js         # Canvas 2D setup: sizing, devicePixelRatio scaling, clear. THE WEBGL SEAM.
     camera.js           # Pan/zoom camera: world↔screen transform, fit-to-bounds, visible rect.
     labels.js           # Screen-space pass that draws integer labels centered on cells.
+    params.js           # Schema -> auto-rendered control panel (number/bool/enum/color).
     viewport.js         # Coordinate helpers: polar→cartesian, world→screen scaling.
     primes.js           # Math utilities: sieve, isPrime, primesUpTo, nthPrime, primeCount (π).
   experiments/
@@ -61,15 +62,21 @@ export default {
   id: 'example',
   name: 'Human Readable Name',
   description: 'One line shown in the picker.',
-  // Tweakable knobs as plain constants for now (no UI yet — REQUIREMENTS §6).
+
+  // Tweakable knobs; the app auto-renders controls for these.
+  params: {
+    count: { type: 'int', min: 1e3, max: 1e7, scale: 'log', default: 1e6, label: 'Integers', expensive: true },
+    color: { type: 'color', default: '#7fd1ff', label: 'Color' },
+  },
 
   // World-space bounding box, used to frame the experiment on selection.
-  bounds() { return { minX: -100, minY: -100, maxX: 100, maxY: 100 }; },
+  bounds(params) { return { minX: -100, minY: -100, maxX: 100, maxY: 100 }; },
 
   // Draw in WORLD coordinates; the camera maps world→screen. `view` gives the
   // current { scale, minX, minY, maxX, maxY } for sizing strokes and culling
-  // off-screen work. Camera transform is already applied to ctx.
-  draw(renderer, view) {
+  // off-screen work. `params` holds the current control values. Camera
+  // transform is already applied to ctx.
+  draw(renderer, view, params) {
     const { ctx } = renderer;
     // ...draw using ctx + core helpers (primes, viewport)...
   },
@@ -80,10 +87,17 @@ Function-style experiments that want fixed screen-space axes/labels set
 `camera: false`; they receive the raw renderer (CSS-px coords, no pan/zoom) and
 may omit `bounds()`. See `prime-counting.js`.
 
-Spatial experiments may also implement `at(worldX, worldY)` returning
+Spatial experiments may also implement `at(worldX, worldY, params)` returning
 `{ n, x, y }` (the integer under that point, or `null`) to power the hover
 readout. The forward layout and its `at()` inverse must agree — `core/labels.js`
 draws on-square integer labels once the camera zooms in past a threshold.
+
+Experiments expose tweakables via a `params` schema; the current values are
+passed as the third argument to `draw(renderer, view, params)` and to
+`bounds(params)` / `at(wx, wy, params)`. Schema entry types: `int`/`float`
+(with optional `scale:'log'` and `expensive:true`), `bool`, `enum`, `color`.
+The app (`core/params.js` + `main.js`) renders the panel, persists values per
+experiment, and debounces redraws for `expensive` params.
 
 ## 2. Milestone 1 — scaffold + three seed experiments  ✅ complete
 
@@ -112,8 +126,7 @@ seed renders the expected visualization without errors.
 
 Future capabilities, gated on actual need rather than scheduled:
 
-- **Parameter UI** — schema-driven control panel once experiments share a knob shape
-  (REQUIREMENTS §6, §8).
+- ~~**Parameter UI**~~ — done: schema-driven control panel (`core/params.js`).
 - **WebGL backend** — second renderer behind the `renderer.js` seam when point counts or
   effects demand it.
 - ~~**Pan / zoom**~~ — done via `core/camera.js` (world-space rendering + drag/scroll/reset).

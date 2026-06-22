@@ -74,9 +74,11 @@ experiment (F8) and the spark for the whole project.
 These are deferred, **not rejected** — likely future work, intentionally excluded from
 the first milestone to keep it small.
 
-- **Configurable-parameter UI** — *deferred.* Premature. Experiments expose tweakables as
-  in-code constants for now. A schema-driven control panel is a strong future candidate
-  once experiments share a parameter shape.
+- **Configurable-parameter UI** — *done.* Each experiment exports a `params` schema; the
+  app auto-renders controls (number with slider + log option, boolean, enum, color) in the
+  sidebar (`core/params.js`). Cheap params redraw live; `expensive`-flagged ones
+  (count/maxPrime/maxX) debounce. Values persist per experiment; a Reset restores defaults.
+  (Was deferred as premature; revived once every experiment had real in-code knobs.)
 - **WebGL / GPU rendering** — *deferred.* See N2; introduced behind the renderer seam when
   needed.
 - **Pan / zoom / interaction** — *done.* Spatial experiments render in a world coordinate
